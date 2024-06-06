@@ -1,9 +1,9 @@
 public class Parameter {
     String name;
-    TypeInfo parseType;
+    TypeInfo paramType;
 
-    Parameter(String name, TypeInfo parseType) {
+    public Parameter(String name, TypeInfo paramType) {
         this.name = name;
-        this.parseType = parseType;
+        this.paramType = paramType;
     }
 }

@@ -3,7 +3,7 @@
 %token INTLIT DOUBLELIT STRINGLIT BOOLLIT NULLVAL
 %token LESSTHANOREQUAL GREATERTHANOREQUAL
 %token ISEQUALTO NOTEQUALTO LOGICALAND LOGICALOR
-%token INCREMENT DECREMENT PUBLIC STATIC
+%token INCREMENT DECREMENT PUBLIC STATIC NEW
 %%
 ClassDecl: PUBLIC CLASS IDENTIFIER ClassBody {
   $$=j0.node("ClassDecl",1000,$3,$4);
@@ -35,7 +35,8 @@ MethodDecl: MethodHeader Block {
   $$=j0.node("MethodDecl",1380,$1,$2);
  };
 MethodHeader: PUBLIC STATIC MethodReturnVal MethodDeclarator {
-  $$=j0.node("MethodHeader",1070,$3,$4); };
+  $$=j0.node("MethodHeader",1070,$3,$4);
+  j0.calcType($$);};
 MethodDeclarator: IDENTIFIER '(' FormalParmListOpt ')' {
   $$=j0.node("MethodDeclarator",1080,$1,$3); };
 
@@ -99,8 +100,12 @@ BreakStmt: BREAK ';' | BREAK IDENTIFIER ';' {
 ReturnStmt: RETURN ExprOpt ';' {
   $$=j0.node("ReturnStmt",1250,$2); };
 
-Primary:  Literal | FieldAccess | MethodCall | '(' Expr ')' {
-  $$=$2;};
+Primary:  Literal | FieldAccess | MethodCall | ArrayAccess | '(' Expr ')' {
+  $$=$2;} | ArrayCreation | InstanceCreation;
+ArrayCreation: NEW Type '[' Expr ']' {
+  $$=j0.node("ArrayCreation", 1260, $2, $4);};
+InstanceCreation: NEW Name '(' ArgListOpt ')' {
+  $$=j0.node("InstanceCreation", 1261, $2, $4);};
 Literal: INTLIT	| DOUBLELIT | BOOLLIT | STRINGLIT | NULLVAL ;
 
 ArgList: Expr | ArgList ',' Expr {
@@ -150,5 +155,8 @@ CondOrExpr: CondAndExpr | CondOrExpr LOGICALOR CondAndExpr {
 Expr: CondOrExpr | Assignment ;
 Assignment: LeftHandSide AssignOp Expr {
 $$=j0.node("Assignment",1370, $1, $2, $3); };
-LeftHandSide: Name | FieldAccess ;
+LeftHandSide: Name | FieldAccess | ArrayAccess ;
 AssignOp: '=' | INCREMENT | DECREMENT ;
+
+ArrayAccess: Name '[' Expr ']' {
+  $$=j0.node("ArrayAccess", 1390, $1, $3);};

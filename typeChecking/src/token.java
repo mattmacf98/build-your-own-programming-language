@@ -9,6 +9,18 @@ public class token {
         id = serial.getid();
 
         switch (cat) {
+            case parser.INT:
+                typeInfo = new TypeInfo("int");
+                break;
+            case parser.DOUBLE:
+                typeInfo = new TypeInfo("double");
+                break;
+            case parser.BOOL:
+                typeInfo = new TypeInfo("boolean");
+                break;
+            case parser.VOID:
+                typeInfo = new TypeInfo("void");
+                break;
             case parser.INTLIT:
                 typeInfo = new TypeInfo("int");
                 break;
@@ -16,7 +28,7 @@ public class token {
                 typeInfo = new TypeInfo("double");
                 break;
             case parser.STRINGLIT:
-                typeInfo = new TypeInfo("String");
+                typeInfo = new ClassType("String");
                 break;
             case parser.BOOLLIT:
                 typeInfo = new TypeInfo("boolean");

@@ -22,6 +22,7 @@
 "void"                 { return j0.scan(parser.VOID); }
 "while"                { return j0.scan(parser.WHILE); }
 "class"                { return j0.scan(parser.CLASS); }
+"new"				   { return j0.scan(parser.NEW); }
 "("                    { return j0.scan(j0.ord("("));}
 ")"                    { return j0.scan(j0.ord(")"));}
 "["                    { return j0.scan(j0.ord("["));}

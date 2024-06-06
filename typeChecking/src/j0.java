@@ -95,13 +95,14 @@ public class j0 {
         globalSymTab = new symtab("global");
         systemSymTab = new symtab("class");
         outSymTab = new symtab("class");
-        outSymTab.insert("println", false, null, new MethodType(null, null));
+        outSymTab.insert("println", false, null, new MethodType(new TypeInfo[]{new ClassType("String")}, new TypeInfo("void")));
         systemSymTab.insert("out", false, outSymTab, new ClassType("PrintStream", outSymTab));
         globalSymTab.insert("System", false, systemSymTab, new ClassType("System", systemSymTab));
 
         root.makeSymbolTables(globalSymTab);
         root.populateSymbolTables();
         root.checkSymbolTables();
+        root.makeClass();
         root.checkType(false);
 //        globalSymTab.print();
     }

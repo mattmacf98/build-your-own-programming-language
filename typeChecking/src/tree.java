@@ -29,29 +29,31 @@ public class tree {
         kids = t;
     }
 
-    public TypeInfo calcType() {
+    public void calcType() {
         for (int i = 0; i < nkids; i++) {
             kids[i].calcType();
         }
         switch (sym) {
             case "FieldDecl":
                 typeInfo = kids[0].typeInfo;
-                return typeInfo;
+                return;
             case "token":
+                if ((typeInfo = tok.typeInfo) != null) {
+                    return;
+                }
                 switch (tok.cat) {
                     case parser.IDENTIFIER:
                         typeInfo = new ClassType(tok.text);
-                        return typeInfo;
+                        return;
                     case parser.INT:
                         typeInfo = new TypeInfo(tok.text);
-                        return typeInfo;
+                        return;
                     default:
                         j0.semerror("don't know the type of " + tok.text);
                 }
             default:
                 j0.semerror("don't know the type of " + sym);
         }
-        return null;
     }
 
     public void assignType(TypeInfo typeInfo) {
@@ -59,6 +61,17 @@ public class tree {
         switch (sym) {
             case "VarDeclarator":
                 kids[0].assignType(new ArrayType(typeInfo));
+                return;
+            case "MethodDeclarator":
+                TypeInfo[] paramList;
+                if (kids[1] != null) {
+                    paramList = kids[1].makeSignature();
+                } else {
+                    paramList = new TypeInfo[0];
+                }
+
+                this.typeInfo = new MethodType(paramList, typeInfo);
+                kids[0].typeInfo = this.typeInfo;
                 return;
             case "token":
                 if (tok.cat != parser.IDENTIFIER) {
@@ -71,6 +84,23 @@ public class tree {
         }
         for (tree kid : kids) {
             kid.assignType(typeInfo);
+        }
+    }
+
+    private TypeInfo[] makeSignature() {
+        switch (sym) {
+            case "FormalParm":
+                return new TypeInfo[]{kids[0].typeInfo};
+            case "FormalParmList":
+                TypeInfo[] typeInfo1 = kids[0].makeSignature();
+                TypeInfo[] typeInfo2 = kids[1].makeSignature();
+                TypeInfo[] typeInfos = new TypeInfo[typeInfo1.length + typeInfo2.length];
+
+                System.arraycopy(typeInfo1, 0, typeInfos, 0, typeInfo1.length);
+                System.arraycopy(typeInfo2, 0, typeInfos, typeInfo1.length, typeInfo2.length);
+                return typeInfos;
+            default:
+                return null;
         }
     }
 
@@ -87,6 +117,47 @@ public class tree {
 
         for (int i = 0; i < nkids; i++) {
             kids[i].makeSymbolTables(curr);
+        }
+    }
+
+    public void makeClass() {
+
+        if (sym.equals("ClassDecl")) {
+
+            // counts number of fields and methods this class has
+            int numMethods = 0;
+            int numFields = 0;
+            symtabEntry resultEntry = stab.lookup(kids[0].tok.text);
+            for (String key : resultEntry.subscopeSymbolTable.table.keySet()) {
+                symtabEntry symtabEntry = resultEntry.subscopeSymbolTable.table.get(key);
+                if (symtabEntry.typeInfo.getBaseType().startsWith("method ")) {
+                    numMethods++;
+                } else {
+                    numFields++;
+                }
+            }
+
+            //populates our fields and methods
+            Parameter fields[] = new Parameter[numFields];
+            Parameter methods[] = new Parameter[numMethods];
+            int methodCur = 0;
+            int fieldCur = 0;
+            for (String key : resultEntry.subscopeSymbolTable.table.keySet()) {
+                symtabEntry symtabEntry = resultEntry.subscopeSymbolTable.table.get(key);
+                if (symtabEntry.typeInfo.getBaseType().startsWith("method ")) {
+                    methods[methodCur++] = new Parameter(key, symtabEntry.typeInfo);
+                } else {
+                    fields[fieldCur++] = new Parameter(key, symtabEntry.typeInfo);
+                }
+            }
+
+            resultEntry.typeInfo = new ClassType(kids[0].tok.text, resultEntry.subscopeSymbolTable, fields, methods, new TypeInfo[0]);
+        } else {
+            for (int i = 0; i < nkids; i++) {
+                if (kids[i].nkids > 0) {
+                    kids[i].makeClass();
+                }
+            }
         }
     }
 
@@ -107,7 +178,8 @@ public class tree {
                 }
                 return;
             case "MethodDecl":
-                stab.insert(kids[0].kids[1].kids[0].tok.text, false, kids[0].stab, new MethodType(null, null));
+                stab.insert(kids[0].kids[1].kids[0].tok.text, false, kids[0].stab, kids[0].kids[1].typeInfo);
+                kids[0].stab.insert("return", false, null, kids[0].kids[0].typeInfo);
                 break;
             case "FormalParm":
                 insertVarDeclarator(kids[1]);
@@ -161,7 +233,6 @@ public class tree {
             return;
         }
 
-
         switch (sym) {
             case "Assignment":
                 typeInfo = checkTypes(kids[0].typeInfo, kids[2].typeInfo);
@@ -169,11 +240,36 @@ public class tree {
             case "AddExpr":
                 typeInfo = checkTypes(kids[0].typeInfo, kids[1].typeInfo);
                 break;
+            case "ArgList":
             case "Block":
             case "BlockStmts":
                 typeInfo = null;
                 break;
             case "MethodCall":
+                if (rule == 1290) {
+                    symtabEntry symtabEntry;
+                    MethodType methodType;
+                    if (kids[0].sym.equals("QualifiedName")) {
+                        methodType = (MethodType) kids[0].dequalify();
+                        checkSignature(methodType);
+                    } else {
+                        if (!kids[0].sym.equals("token")) {
+                            j0.semerror("can't check type of " + kids[0].sym);
+                        }
+                        if (kids[0].tok.cat == parser.IDENTIFIER) {
+                            symtabEntry = stab.lookup(kids[0].tok.text);
+                            if (symtabEntry != null) {
+                                if (!(symtabEntry.typeInfo instanceof MethodType)) {
+                                    j0.semerror("method expected, got " + symtabEntry.typeInfo.getBaseType());
+                                }
+                                methodType = (MethodType) symtabEntry.typeInfo;
+                                checkSignature(methodType);
+                            }
+                        } else {
+                            j0.semerror("can't typecheck token " + kids[0].tok.cat);
+                        }
+                    }
+                }
                 break;
             case "QualifiedName":
                 if (kids[0].typeInfo instanceof ClassType) {
@@ -183,12 +279,108 @@ public class tree {
                     j0.semerror("illegal . on " + kids[0].typeInfo.getBaseType());
                 }
                 break;
+            case "ArrayCreation":
+                typeInfo = new ArrayType(kids[0].typeInfo);
+                break;
+            case "ArrayAccess":
+                if (kids[0].typeInfo.getBaseType().startsWith("array ")) {
+                    if (kids[1].typeInfo.getBaseType().equals("int")) {
+                        typeInfo = ((ArrayType)(kids[0].typeInfo)).elementType;
+                    } else {
+                        j0.semerror("subscripting array with " + kids[1].typeInfo.getBaseType());
+                    }
+                }
+                break;
+            case "ReturnStmt":
+                symtabEntry symtabEntry = stab.lookup("return");
+                if (symtabEntry == null) {
+                    j0.semerror("stab did not find a return type");
+                }
+                TypeInfo returnType = symtabEntry.typeInfo;
+                if (kids[0].typeInfo != null) {
+                    typeInfo = checkTypes(returnType, kids[0].typeInfo);
+                } else if (!returnType.getBaseType().equals("void")) {
+                    j0.semerror("void return from non-void method");
+                }
+                break;
+            case "InstanceCreation":
+                symtabEntry resultValue = stab.lookup(kids[0].tok.text);
+                if (resultValue == null) {
+                    j0.semerror("unknown type " + kids[0].tok.text);
+                }
+                assert resultValue != null;
+                typeInfo = resultValue.typeInfo;
+                if (typeInfo == null) {
+                    j0.semerror(kids[0].tok.text + " has unknown type");
+                }
+                break;
             case "token":
                 typeInfo = tok.type(stab);
                 break;
             default:
                 j0.semerror("cannot check type of " + sym);
         }
+    }
+
+    private TypeInfo dequalify() {
+        TypeInfo classType = null;
+        symtabEntry symtabEntry;
+        //recursive swim down to find token and type info
+        if (kids[0].sym.equals("QualifiedName")) {
+            classType = kids[0].dequalify();
+        } else if (kids[0].sym.equals("token") && kids[0].tok.cat == parser.IDENTIFIER) {
+            symtabEntry = stab.lookup(kids[0].tok.text);
+            if (symtabEntry == null) {
+                j0.semerror("unknown symbol " + kids[0].tok.text);
+            } else {
+                classType = symtabEntry.typeInfo;
+            }
+        } else {
+            j0.semerror("can't dequalify " + sym);
+        }
+
+        assert classType != null;
+        if (!classType.getBaseType().equals("class")) {
+            j0.semerror("can't dequalify " + classType.getBaseType());
+        }
+
+        // get type of the accessor on class
+        symtabEntry = ((ClassType) classType).symbolTable.lookup(kids[1].tok.text);
+        if (symtabEntry != null) {
+            return symtabEntry.typeInfo;
+        } else {
+            j0.semerror("couldn't lookup " + kids[1].tok.text + " in " + classType.getBaseType());
+            return null;
+        }
+    }
+
+    private void checkSignature(MethodType signature) {
+        int expectedNumberOfParams = signature.parameters.length;
+        int actualNUmberOfParams = 1;
+        tree kid = kids[1];
+        if (kid == null && expectedNumberOfParams != 0) {
+            j0.semerror("0 params, expected " + expectedNumberOfParams);
+        } else if (kid != null) {
+            while (kid.sym.equals("ArgList")) {
+                actualNUmberOfParams++;
+                kid = kid.kids[0];
+            }
+
+            if (actualNUmberOfParams != expectedNumberOfParams) {
+                j0.semerror(actualNUmberOfParams + " parameters, expected " + expectedNumberOfParams);
+            }
+
+            kid = kids[1];
+            int paramCursor = expectedNumberOfParams - 1;
+            while (kid.sym.equals("ArgList")) {
+                checkTypes(kid.kids[1].typeInfo, signature.parameters[paramCursor]);
+                kid = kid.kids[0];
+                paramCursor--;
+            }
+            checkTypes(kid.typeInfo, signature.parameters[0]);
+        }
+
+        typeInfo = signature.returnType;
     }
 
     private boolean checkKids(boolean inCodeBlock) {
@@ -217,17 +409,32 @@ public class tree {
 
     private TypeInfo checkTypes(TypeInfo operand1, TypeInfo operand2) {
         String operator = getOp();
+        if (operand1 instanceof MethodType) {
+            operand1 = ((MethodType) operand1).returnType;
+        }
+        if (operand2 instanceof MethodType) {
+            operand2 = ((MethodType) operand2).returnType;
+        }
         switch (operator) {
             case "=":
             case "+":
             case "-":
+            case "param":
+            case "return":
                 tree tokenKid;
                 if ((tokenKid = findToken()) != null) {
-                    System.out.println("line " + tokenKid.tok.lineno + ": ");
+                    System.out.print("line " + tokenKid.tok.lineno + ": ");
                 }
-                if (operand1.getBaseType().equals(operand2.getBaseType()) && operand1.getBaseType().equals("int")) {
+                if (operand1.getBaseType().equals(operand2.getBaseType()) && ( operand1.getBaseType().equals("int") || operand1.getBaseType().equals("String"))) {
                     System.out.println("typecheck " + operator + " on a " + operand2.getBaseType() + " and a " + operand1.getBaseType() +  " -> OK");
                     return operand1;
+                } else if (operand1.getBaseType().equals("class") && operand2.getBaseType().equals("class") && operator.equals("param") &&
+                        ((ClassType)operand1).name.equals(((ClassType)operand2).name)) {
+                    System.out.println("typecheck " + operator + " on a " + ((ClassType) operand2).name + " and a " + ((ClassType) operand1).name +  " -> OK");
+                    return operand1;
+                } else if (operand1.getBaseType().equals("array") && operand2.getBaseType().equals("array") && operator.equals("=") &&
+                        checkTypes(((ArrayType)(operand1)).elementType, ((ArrayType)(operand2)).elementType) != null) {
+                        return operand1;
                 } else {
                     j0.semerror("typecheck " + operator + " on a " + operand2.getBaseType() + " and a " + operand1.getBaseType() +  " -> FAIL");
                 }
@@ -257,6 +464,10 @@ public class tree {
                 return "=";
             case "AddExpr":
                 return rule == 1320 ? "+" : "-";
+            case "MethodCall":
+                return "param";
+            case "ReturnStmt":
+                return "return";
             default:
                 return sym;
         }

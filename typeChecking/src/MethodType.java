@@ -1,8 +1,8 @@
 public class MethodType extends TypeInfo {
-    Parameter[] parameters;
+    TypeInfo[] parameters;
     TypeInfo returnType;
 
-    MethodType(Parameter[] parameters, TypeInfo returnType) {
+    MethodType(TypeInfo[] parameters, TypeInfo returnType) {
         super("method");
         this.parameters = parameters;
         this.returnType = returnType;
