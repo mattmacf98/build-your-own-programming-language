@@ -1,0 +1,14 @@
+package hello
+class hello ()
+proceduremain(main)
+{
+local 
+a
+a:=0
+a:=(a + 1)
+if a < 2 then {
+local 
+b
+b:=2
+}
+}

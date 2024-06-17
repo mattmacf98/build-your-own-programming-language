@@ -1,0 +1,26 @@
+{
+    "identifier": {
+        "id": "mm.jzero",
+        "uuid": "e3d2d657-418c-4f0f-a136-5ba8ae868719",
+        "version": "0.1.0",
+        "location": {
+            "$mid": 1,
+            "fsPath": "/Users/macfarqu/.vscode/extensions/mm.jzero-0.1.0",
+            "_sep": 1,
+            "external": "file:///Users/macfarqu/.vscode/extensions/mm.jzero-0.1.0",
+            "path": "/Users/macfarqu/.vscode/extensions/mm.jzero-0.1.0",
+            "scheme": "file"
+        },
+        "relativeLocation": "mm.jzero-0.1.0",
+        "metadata": {
+            "id": "e3d2d657-418c-4f0f-a136-5ba8ae868719",
+            "publisherId": "29967744-d29e-4853-8c50-c18b052a1c78",
+            "publisherDisplayName": "Matthew MacFarquhar",
+            "targetPlatform": "undefined",
+            "updated": false,
+            "isPreReleaseVersion": false,
+            "installedTimestamp": 1718283214000,
+            "preRelease": false
+        }
+    }
+}

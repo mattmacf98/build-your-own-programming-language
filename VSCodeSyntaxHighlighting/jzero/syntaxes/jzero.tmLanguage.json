@@ -1,0 +1,50 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "Jzero",
+	"patterns": [
+		{
+			"include": "#keywords"
+		},
+		{
+			"include": "#strings"
+		},
+		{
+			"include": "#expressions"
+		}
+	],
+	"repository": {
+		"keywords": {
+			"patterns": [{
+				"name": "keyword.control.jzero",
+				"match": "\\b(if|while|for|return)\\b"
+			}]
+		},
+		"strings": {
+			"name": "string.quoted.double.jzero",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape.jzero",
+					"match": "\\\\."
+				}
+			]
+		},
+		"expressions": {
+			"patterns": [{"include": "#paren-expression"}]
+		},
+		"paren-expression": {
+			"begin": "\\(",
+			"end": "\\)",
+			"beginCaptures": {
+				"0": {"name": "punctuation.paren.open"}
+			},
+			"endCaptures": {
+				"0": {"name": "punctuation.paren.close"}
+			},
+			"name": "expression.group",
+			"patterns": [{"include": "#expression"}]
+		}
+	},
+	"scopeName": "source.jzero"
+}

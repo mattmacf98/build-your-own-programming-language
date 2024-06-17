@@ -1,0 +1,34 @@
+{
+  "name": "jzero",
+  "displayName": "Jzero SyntaxColorer",
+  "description": "Jzero programming language",
+  "author": "Matthew MacFarquhar",
+  "license": "public domain",
+  "version": "0.1.0",
+  "publisher": "mm",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "keywords": [
+    "Jzero"
+  ],
+  "activationEvents": [
+    "onLanguage:jzero"
+  ],
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [{
+      "id": "jzero",
+      "aliases": ["Jzero", "jzero"],
+      "extensions": [".j0"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "jzero",
+      "scopeName": "source.jzero",
+      "path": "./syntaxes/jzero.tmLanguage.json"
+    }]
+  }
+}
