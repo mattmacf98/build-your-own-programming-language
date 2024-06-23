@@ -12,7 +12,6 @@ public class Address {
     }
 
     public String str() {
-//        System.out.println("\nstr: " + region + " " + offset);
         switch (region) {
             case "lab": return "L" + offset;
             case "loc": case "imm": case "method":

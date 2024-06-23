@@ -197,7 +197,7 @@ public class tree {
         String procedureName = kids[1].kids[0].iconCode.get(0);
         String reservedWord = rule == 1070 ? "procedure" : "method";
         iconCode = new ArrayList<>();
-        iconCode.add(reservedWord + procedureName + "(" + kids[1].iconCode.get(0) + ")");
+        iconCode.add(reservedWord + " " + procedureName + "(" + kids[1].iconCode.get(0) + ")");
     }
 
     private void generateUniconEqExpr() {

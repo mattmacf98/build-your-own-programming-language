@@ -1,13 +1,13 @@
 package hello
 class hello ()
-proceduremain(main)
+procedure main(main)
 {
-local 
+local
 a
 a:=0
 a:=(a + 1)
 if a < 2 then {
-local 
+local
 b
 b:=2
 }
